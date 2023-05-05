@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import Client from "../components/Client";
+import Editor from "../components/Editor";
 const EditorPage = () => {
   const [clients, setClients] = useState([
     { socketId: 1, username: "Alizee" },
     { socketId: 2, username: "John Doe" },
+    { socketId: 3, username: "Jane Doe" },
   ]);
   return (
-    <div className="mainWrao">
+    <div className="mainWrap">
       <div className="aside">
         <div className="asideInner">
           <div className="logo">
@@ -19,8 +21,12 @@ const EditorPage = () => {
             ))}
           </div>
         </div>
+        <button className="btn copyBtn">Copy ROOM ID</button>
+        <button className="btn leaveBtn">Leave</button>
       </div>
-      <div className="editorWrap">Editor's code goes here...</div>
+      <div className="editorWrap">
+        <Editor />
+      </div>
     </div>
   );
 };
