@@ -14,7 +14,7 @@ const EditorPage = () => {
   const socketRef = useRef(null);
   const location = useLocation();
   const reactNavigator = useNavigate();
-  const { roomID } = useParams();
+  const { roomId } = useParams();
   const [clients, setClients] = useState([]);
   useEffect(() => {
     const init = async () => {
@@ -29,7 +29,7 @@ const EditorPage = () => {
       }
 
       socketRef.current.emit(ACTIONS.JOIN, {
-        roomID,
+        roomId,
         username: location.state?.username,
       });
 
@@ -37,22 +37,40 @@ const EditorPage = () => {
       socketRef.current.on(
         ACTIONS.JOINED,
         ({ clients, username, socketId }) => {
-          console.log(username);
           if (username !== location.state?.username) {
             toast.success(`${username} joined the room`);
             console.log(`${username} joined`);
-            console.log(clients);
           }
-          console.log(clients);
           setClients(clients);
         }
       );
+      // listening for disconnection
+      socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
+        toast.success(`${username} left the room`);
+        setClients((prev) => {
+          return prev.filter((client) => client.socketId !== socketId);
+        });
+      });
     };
     init();
+    return () => {
+      socketRef.current.off(ACTIONS.JOINED);
+      socketRef.current.off(ACTIONS.DISCONNECTED);
+      socketRef.current.disconnect();
+    };
   }, []);
 
   if (!location.state) {
     return <Navigate to="/" />;
+  }
+
+  async function copyRoomId() {
+    try {
+      await navigator.clipboard.writeText(roomId);
+      toast.success("Room ID has been copied to clipboard.");
+    } catch (error) {
+      toast.error("Could not copy the room ID");
+    }
   }
   return (
     <div className="mainWrap">
@@ -68,11 +86,13 @@ const EditorPage = () => {
             ))}
           </div>
         </div>
-        <button className="btn copyBtn">Copy ROOM ID</button>
+        <button className="btn copyBtn" onClick={copyRoomId}>
+          Copy ROOM ID
+        </button>
         <button className="btn leaveBtn">Leave</button>
       </div>
       <div className="editorWrap">
-        <Editor />
+        <Editor socketRef={socketRef} roomId={roomId} />
       </div>
     </div>
   );
